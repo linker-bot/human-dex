@@ -97,7 +97,7 @@ class RealEnv:
         arms_action = self.recorder_arms.arm_action
         left_hand_action = self.recorder_arms.left_hand_action
         right_hand_action = self.recorder_arms.right_hand_action
-        action = arms_action+left_hand_action+right_hand_action
+        action = list(arms_action)+list(left_hand_action)+list(right_hand_action)
         return action
     def clean_data(self):
         self.recorder_arms.clean_recorder()

@@ -2,8 +2,8 @@ import os
 
 ### Task parameters
 DATA_DIR = f'{os.path.dirname(os.path.realpath(__file__))}/data' 
-LEFT_HAND_JOINT = 9 # 左手关节数
-RIGHT_HAND_JOINT = 9 # 右手关节数
+LEFT_HAND_JOINT = 10 # 左手关节数
+RIGHT_HAND_JOINT = 10 # 右手关节数
 LEFT_ARM_JOINT = 6 # 左臂关节数
 RIGHT_ARM_JOINT = 6 # 右臂关节数
 TASK_CONFIGS = {

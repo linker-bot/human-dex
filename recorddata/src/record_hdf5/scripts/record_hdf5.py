@@ -226,6 +226,9 @@ class RecordHdf5:
         
         with h5py.File(dataset_path + '.hdf5', 'w', rdcc_nbytes=1024**2*2) as root:
             root.attrs['sim'] = False
+            root.attrs['hand_schema_version'] = 2
+            root.attrs['hand_unit'] = 'rad'
+            root.attrs['hand_mapping_json'] = json.dumps(self.env.recorder_arms.hand_adapters['left'].config, sort_keys=True)
             root.attrs['compress'] = COMPRESS
             obs = root.create_group('observations')
             image = obs.create_group('images')
@@ -313,6 +316,9 @@ class RecordHdf5:
         
         with h5py.File(dataset_path + '.hdf5', 'w', rdcc_nbytes=1024**2*2) as root:
             root.attrs['sim'] = False
+            root.attrs['hand_schema_version'] = 2
+            root.attrs['hand_unit'] = 'rad'
+            root.attrs['hand_mapping_json'] = json.dumps(self.env.recorder_arms.hand_adapters['left'].config, sort_keys=True)
             root.attrs['compress'] = COMPRESS
             obs = root.create_group('observations')
             image = obs.create_group('images')

@@ -1,0 +1,57 @@
+{
+  "model": "L20lite",
+  "hands": {
+    "left": {
+      "state": {
+        "thumb_cmc_roll": null,
+        "thumb_cmc_yaw": null,
+        "thumb_cmc_pitch": null,
+        "index_mcp_roll": null,
+        "index_mcp_pitch": null,
+        "middle_mcp_pitch": null,
+        "ring_mcp_roll": null,
+        "ring_mcp_pitch": null,
+        "pinky_mcp_roll": null,
+        "pinky_mcp_pitch": null
+      },
+      "command": {
+        "thumb_cmc_roll": null,
+        "thumb_cmc_yaw": null,
+        "thumb_cmc_pitch": null,
+        "index_mcp_roll": null,
+        "index_mcp_pitch": null,
+        "middle_mcp_pitch": null,
+        "ring_mcp_roll": null,
+        "ring_mcp_pitch": null,
+        "pinky_mcp_roll": null,
+        "pinky_mcp_pitch": null
+      }
+    },
+    "right": {
+      "state": {
+        "thumb_cmc_roll": null,
+        "thumb_cmc_yaw": null,
+        "thumb_cmc_pitch": null,
+        "index_mcp_roll": null,
+        "index_mcp_pitch": null,
+        "middle_mcp_pitch": null,
+        "ring_mcp_roll": null,
+        "ring_mcp_pitch": null,
+        "pinky_mcp_roll": null,
+        "pinky_mcp_pitch": null
+      },
+      "command": {
+        "thumb_cmc_roll": null,
+        "thumb_cmc_yaw": null,
+        "thumb_cmc_pitch": null,
+        "index_mcp_roll": null,
+        "index_mcp_pitch": null,
+        "middle_mcp_pitch": null,
+        "ring_mcp_roll": null,
+        "ring_mcp_pitch": null,
+        "pinky_mcp_roll": null,
+        "pinky_mcp_pitch": null
+      }
+    }
+  }
+}

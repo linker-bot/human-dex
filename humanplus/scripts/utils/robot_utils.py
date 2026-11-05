@@ -12,6 +12,14 @@ from HIT.constants import DT, LEFT_HAND_JOINT, RIGHT_HAND_JOINT, LEFT_ARM_JOINT,
 import IPython
 e = IPython.embed
 
+
+from pathlib import Path
+_shared_root = next((p for p in Path(__file__).resolve().parents if (p / 'shared' / 'hand_adapter.py').exists()), None)
+if _shared_root is None:
+    _shared_root = Path(os.environ['HUMAN_DEX_ROOT'])
+sys.path.insert(0, str(_shared_root))
+from shared.hand_adapter import HandAdapter, JOINTS
+
 class ImageRecorder:
     def __init__(self, init_node=True, is_debug=False):
         from collections import deque
@@ -74,6 +82,7 @@ class Recorder:
         from sensor_msgs.msg import JointState
         # from interbotix_xs_msgs.msg import JointGroupCommand, JointSingleCommand
         self.side = side
+        self.hand_adapters = {s: HandAdapter.load(s) for s in ("left", "right")}
         self.secs = None
         self.nsecs = None
         self.name = None
@@ -135,30 +144,29 @@ class Recorder:
             self.effort = self.joint_state_data.effort
 
     def left_hand_state_cb(self, data):
-        tmp_data = data
-        self.left_hand_name = tmp_data.name[:LEFT_HAND_JOINT]
-        self.left_hand_qpos = tmp_data.position[:LEFT_HAND_JOINT]
-        self.left_hand_qvel = tmp_data.velocity[:LEFT_HAND_JOINT]
-        self.left_hand_effort = tmp_data.effort[:LEFT_HAND_JOINT]
+        adapter = self.hand_adapters['left']
+        self.left_hand_name = list(JOINTS)
+        self.left_hand_qpos = adapter.decode(data.name, data.position)
+        self.left_hand_qvel = adapter.decode(data.name, data.velocity, optional=True, velocity=True)
+        self.left_hand_effort = []  # No torque calibration is assumed.
 
     def right_hand_state_cb(self, data):
-        tmp_data = data
-        self.right_hand_name = tmp_data.name[:RIGHT_HAND_JOINT]
-        self.right_hand_qpos = tmp_data.position[:RIGHT_HAND_JOINT]
-        self.right_hand_qvel = tmp_data.velocity[:RIGHT_HAND_JOINT]
-        self.right_hand_effort = tmp_data.effort[:RIGHT_HAND_JOINT]
+        adapter = self.hand_adapters['right']
+        self.right_hand_name = list(JOINTS)
+        self.right_hand_qpos = adapter.decode(data.name, data.position)
+        self.right_hand_qvel = adapter.decode(data.name, data.velocity, optional=True, velocity=True)
+        self.right_hand_effort = []  # No torque calibration is assumed.
 
-    # action
     def arms_action_cb(self, data):
         self.data = data
         self.arm_action = data.position
         self.arm_name = data.name
         self.joint_state_data = data
     def left_hand_action_cb(self, data):
-        self.left_hand_action = data.position[:LEFT_HAND_JOINT]
+        self.left_hand_action = self.hand_adapters["left"].decode(data.name, data.position, kind="command")
         self.left_hand_state_data = data
     def right_hand_action_cb(self, data):
-        self.right_hand_action = data.position[:RIGHT_HAND_JOINT]
+        self.right_hand_action = self.hand_adapters["right"].decode(data.name, data.position, kind="command")
         self.right_hand_data = data
     def clean_recorder(self):
         self.secs = None

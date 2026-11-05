@@ -9,6 +9,7 @@ from std_msgs.msg import Header, String
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from HIT.constants import DT, LEFT_HAND_JOINT, RIGHT_HAND_JOINT, LEFT_ARM_JOINT, RIGHT_ARM_JOINT
 from robot_utils import Recorder, ImageRecorder
+from shared.hand_adapter import split_action
 #from robot_utils import setup_master_bot, setup_puppet_bot, move_arms, move_grippers
 
 import pyagxrobots
@@ -51,14 +52,14 @@ class RealEnv:
         joint_state.header = Header()
         # 自动生成时间戳和序列号
         joint_state.header.stamp = rospy.Time.now()  # 获取当前时间
-        joint_state.header.seq = rospy.get_time()    # 可以使用 get_time() 生成序列号，但通常 seq 是消息流中递增的
+        joint_state.header.seq = 0    # 可以使用 get_time() 生成序列号，但通常 seq 是消息流中递增的
         joint_state.header.frame_id = "world"
         joint_state.header.stamp = rospy.Time.now()
         joint_state.name = name
         joint_state.position = action
-        if len(name) > 9:
-            joint_state.velocity = [2.0, 2.0, 2.0, 2.0, 2.0,
-                                    7.168999671936035, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+        if name and len(name) != len(action):
+            raise ValueError('Joint names and positions differ in length')
+        joint_state.velocity = []
         joint_state.effort = []
         print("names")
         print(name)
@@ -142,44 +143,18 @@ class RealEnv:
 
     def step(self, action, base_action=None, get_tracer_vel=False, get_obs=True):
         
-        # state_len = int(len(action) / 2) # 
-        # arms_action = action[:state_len] # 12
-        # arms_len = int(len(arms_action) / 2)
-        # left_arm_position = arms_action[:arms_len] # 左臂数据
-        # right_arm_position = arms_action[arms_len:] # 右臂数据
-        # hands_action = action[state_len:] # 12
-        # hands_len = int(len(hands_action) / 2)
-        # left_hand_position = hands_action[:hands_len] # 左手数据
-        # print("*"*20)
-        # print(len(left_hand_position))
-        # right_hand_position = hands_action[hands_len:] # 右手数据
-        # 截取双臂数据
-        arms_action = action[:12]
-        # 截取双手数据
-        hands_action = action[12:]
-        # 左手数据
-        left_hand_position = hands_action[:LEFT_HAND_JOINT]
-        right_hand_position = hands_action[RIGHT_HAND_JOINT:]
+        arms_action, left, right = split_action(
+            action, LEFT_ARM_JOINT, RIGHT_ARM_JOINT, LEFT_HAND_JOINT, RIGHT_HAND_JOINT)
+        left_names, left_values = self.recorder_arms.hand_adapters['left'].encode(left)
+        right_names, right_values = self.recorder_arms.hand_adapters['right'].encode(right)
+        # Construct and validate every message before publishing any command.
+        left_msg = self.joint_msg(left_values, left_names)
+        right_msg = self.joint_msg(right_values, right_names)
+        arm_msg = self.joint_msg(arms_action, self.recorder_arms.name)
+        self.left_hand_pub.publish(left_msg)
+        self.right_hand_pub.publish(right_msg)
+        self.arm_pub.publish(arm_msg)
 
-        # 遍历列表并修改小于 0.0 的元素
-        for i, value in enumerate(left_hand_position):
-            if value < 0.0:
-                left_hand_position[i] = 0.0
-        for j, v in enumerate(right_hand_position):
-            if v < 0.0:
-                right_hand_position[j] = 0.0
-        # 左手数据
-        left_j=self.joint_msg(action=left_hand_position,name=self.recorder_arms.left_hand_name)
-        #print(f"左手数据：{left_j}")
-        self.left_hand_pub.publish(left_j)
-        # 右手数据
-        right_j = self.joint_msg(action=right_hand_position,name=self.recorder_arms.right_hand_name)
-        #print(f"右手数据：{right_j}")
-        self.right_hand_pub.publish(right_j)
-        # 双臂数据
-        arms_j = self.joint_msg(action=arms_action, name=self.recorder_arms.name)
-        self.arm_pub.publish(arms_j)
-        
         if base_action is not None:
             # linear_vel_limit = 1.5
             # angular_vel_limit = 1.5
@@ -202,7 +177,7 @@ class RealEnv:
         arms_action = self.recorder_arms.arm_action
         left_hand_action = self.recorder_arms.left_hand_action
         right_hand_action = self.recorder_arms.right_hand_action
-        action = arms_action+left_hand_action+right_hand_action
+        action = list(arms_action)+list(left_hand_action)+list(right_hand_action)
         return action
     def clean_data(self):
         self.recorder_arms.clean_recorder()
