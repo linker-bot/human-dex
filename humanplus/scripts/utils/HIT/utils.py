@@ -208,6 +208,8 @@ def get_norm_stats(dataset_path_list,observation_name=['qpos']):
     for dataset_path in dataset_path_list:
         try:
             with h5py.File(dataset_path, 'r') as root:
+                if observation_name == ['qpos', 'hand_action'] and root.attrs.get('hand_schema_version') != 3:
+                    raise ValueError('Expected feedback-based hand schema version 3')
                 action = root['/action'][()]
                 original_action_shape = action.shape
                 try:
