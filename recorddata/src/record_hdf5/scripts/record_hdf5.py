@@ -180,7 +180,7 @@ class RecordHdf5:
             ts = timesteps.pop(0)
             arm_j = int(LEFT_ARM_JOINT+RIGHT_ARM_JOINT)
             self.humanplus_data_dic["/action"].append(action)
-            self.humanplus_data_dic["/observations/hand_action"].append(action[arm_j:]) # 总action切除手臂元素=双手action
+            self.humanplus_data_dic["/observations/hand_action"].append(ts.observation["hand_qpos"]) # 总action切除手臂元素=双手action
             self.humanplus_data_dic["/observations/imu_orn"].append(np.array([0]*self.joint_total, dtype=np.float32))
             self.humanplus_data_dic["/observations/imu_vel"].append(np.array([0]*self.joint_total, dtype=np.float32))
             self.humanplus_data_dic["/observations/qpos"].append(ts.observation['qpos'])
@@ -226,7 +226,7 @@ class RecordHdf5:
         
         with h5py.File(dataset_path + '.hdf5', 'w', rdcc_nbytes=1024**2*2) as root:
             root.attrs['sim'] = False
-            root.attrs['hand_schema_version'] = 2
+            root.attrs['hand_schema_version'] = 3
             root.attrs['hand_unit'] = 'rad'
             root.attrs['hand_mapping_json'] = json.dumps(self.env.recorder_arms.hand_adapters['left'].config, sort_keys=True)
             root.attrs['compress'] = COMPRESS
@@ -316,7 +316,7 @@ class RecordHdf5:
         
         with h5py.File(dataset_path + '.hdf5', 'w', rdcc_nbytes=1024**2*2) as root:
             root.attrs['sim'] = False
-            root.attrs['hand_schema_version'] = 2
+            root.attrs['hand_schema_version'] = 3
             root.attrs['hand_unit'] = 'rad'
             root.attrs['hand_mapping_json'] = json.dumps(self.env.recorder_arms.hand_adapters['left'].config, sort_keys=True)
             root.attrs['compress'] = COMPRESS

@@ -31,6 +31,8 @@ def limits(model, side):
 
 class HandAdapter:
     def __init__(self, config, side):
+        if side not in ("left", "right"):
+            raise ValueError("Invalid hand side")
         self.side = side
         self.config = config
         self.model = config['model']
@@ -48,9 +50,17 @@ class HandAdapter:
                 selector = ('name', entry['name']) if 'name' in entry else ('index', entry['index'])
                 if selector[0] == 'index' and (type(selector[1]) is not int or selector[1] < 0):
                     raise ValueError('Invalid channel index')
+                if selector[0] == 'name' and (not isinstance(selector[1], str) or not selector[1].strip()):
+                    raise ValueError('Channel name must be a nonempty string')
                 selectors.append(selector)
+                if any(type(entry.get(k)) not in (int, float) for k in ('scale', 'offset')):
+                    raise ValueError('Scale and offset must be numbers')
                 if not math.isfinite(entry['scale']) or entry['scale'] == 0 or not math.isfinite(entry['offset']):
                     raise ValueError('Invalid affine calibration')
+            if len({k for k, v in selectors}) != 1:
+                raise ValueError('Do not mix named and indexed channels')
+            if kind == 'command' and selectors[0][0] == 'index' and sorted(v for k, v in selectors) != list(range(10)):
+                raise ValueError('Command indices must cover 0..9')
             if len(set(selectors)) != 10:
                 raise ValueError('Duplicate channels')
 
@@ -67,6 +77,9 @@ class HandAdapter:
             return []
         if names and len(set(names)) != len(names):
             raise ValueError('Duplicate message names')
+        names = list(names)
+        if names and len(names) != len(values):
+            raise ValueError('Message names and values differ in length')
         out = []
         for joint in JOINTS:
             entry = self.channels[kind][joint]

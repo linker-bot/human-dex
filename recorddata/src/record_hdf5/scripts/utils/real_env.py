@@ -78,6 +78,7 @@ class RealEnv:
     def get_observation(self, get_tracer_vel=False):
         obs = collections.OrderedDict()
         obs['qpos'] = self.get_qpos()
+        obs['hand_qpos'] = np.concatenate([self.recorder_arms.left_hand_qpos, self.recorder_arms.right_hand_qpos])
         obs['qvel'] = self.get_qvel()
         obs['effort'] = self.get_effort()
         obs['images'] = self.get_images()

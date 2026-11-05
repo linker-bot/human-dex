@@ -41,6 +41,34 @@ class AdapterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             split_action([0]*30)
 
+    def test_configuration_rejected_at_startup(self):
+        for change in (
+            {'name': '' , 'scale': 1, 'offset': 0},
+            {'index': 10, 'scale': 1, 'offset': 0},
+            {'name': 'channel', 'scale': True, 'offset': 0},
+            {'name': 'channel', 'scale': 1},
+        ):
+            c = config()
+            c['hands']['left']['command'][JOINTS[0]] = change
+            with self.assertRaises(ValueError):
+                HandAdapter(c, 'left')
+        with self.assertRaises(ValueError):
+            HandAdapter(config(), 'invalid')
+
+    def test_integer_task_dimensions(self):
+        import runpy
+        from pathlib import Path
+        root = Path(__file__).resolve().parents[1]
+        for path, task in (
+            ('humanplus/scripts/utils/HIT/constants.py', 'data_cb_grasp'),
+            ('recorddata/src/record_hdf5/scripts/utils/constants.py', 'data_columbus_test'),
+        ):
+            task_config = runpy.run_path(str(root / path))['TASK_CONFIGS'][task]
+            for key in ('state_dim', 'action_dim', 'joint_total'):
+                self.assertEqual(task_config[key], 32)
+            self.assertEqual(len(task_config['state_mask']), 32)
+            self.assertEqual(len(task_config['action_mask']), 32)
+
     def test_index_order(self):
         c = config()
         for k in ('state', 'command'):

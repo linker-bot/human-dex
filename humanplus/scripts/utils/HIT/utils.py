@@ -218,14 +218,17 @@ def get_norm_stats(dataset_path_list,observation_name=['qpos']):
                         else:
                             observation_data.append(root[f'/observations/{name}'][()])
                     qpos = np.concatenate(observation_data, axis=-1)
-                except:
-                    qpos = np.zeros([original_action_shape[0],40])
+                except Exception as exc:
+                    raise ValueError('Missing or invalid observation fields') from exc
 
       
         except Exception as e:
             print(f'Error loading {dataset_path} in get_norm_stats')
             print(e)
-            quit()
+            raise ValueError('Invalid training episode: ' + str(dataset_path)) from e
+        if observation_name == ['qpos', 'hand_action']:
+            if action.ndim != 2 or action.shape[1] != 32 or qpos.shape != action.shape:
+                raise ValueError('Expected matching 32-dimensional observations and actions: ' + str(dataset_path))
         all_qpos_data.append(torch.from_numpy(qpos))
         all_action_data.append(torch.from_numpy(action))
         all_action_v_data.append(torch.from_numpy(action[1:, :]-action[:-1, :]))

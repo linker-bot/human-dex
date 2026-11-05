@@ -330,6 +330,10 @@ def eval_bc(config, ckpt_name, save_episode=True, num_rollouts=50):
     with open(stats_path, 'rb') as f:
         stats = pickle.load(f)
 
+    for key in ('qpos_mean', 'qpos_std', 'action_mean', 'action_std'):
+        if np.asarray(stats[key]).shape != (state_dim,):
+            raise ValueError('Incompatible dataset statistics: ' + key)
+
     pre_process = lambda s_qpos: (s_qpos - stats['qpos_mean']) / stats['qpos_std']
     post_process = lambda a: a * stats['action_std'] + stats['action_mean']
 

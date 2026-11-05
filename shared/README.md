@@ -32,3 +32,7 @@ do not silently pad old demonstrations. The other inherited task definitions
 have not been migrated to this robot's schema.
 
 Offline checks: `python3 -m unittest discover -s tests -v`.
+
+Schema version 3 records actual hand feedback in the legacy-named hand_action
+observation field, matching inference observations. Version 2 used command labels
+there; recollect those episodes before training a feedback-based policy.
